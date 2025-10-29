@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Row, Col, Statistic, Button, Upload, message } from 'antd';
+import { Card, Row, Col, Statistic } from 'antd';
 import { 
   FilePdfOutlined, 
   PictureOutlined, 
@@ -7,205 +7,169 @@ import {
   CloudUploadOutlined,
   RocketOutlined 
 } from '@ant-design/icons';
-import axios from 'axios';
 
-const API_BASE = 'http://127.0.0.1:8000';
+import PdfAnalyzer from './PdfAnalyzer';
+import ImageAnalyzer from './ImageAnalyzer';
+import VideoAnalyzer from './VideoAnalyzer';
 
 const Dashboard = () => {
-  const [fileStats, setFileStats] = React.useState({
+  const [fileStats] = React.useState({
     pdfProcessed: 0,
     imagesAnalyzed: 0,
     videosTranscribed: 0,
     totalQueries: 0
   });
 
-  const handleFileUpload = async (file, type) => {
-    const formData = new FormData();
-    formData.append('file', file);
+  const [activeAnalyzer, setActiveAnalyzer] = React.useState(null);
 
-    try {
-      let endpoint = '';
-      switch (type) {
-        case 'pdf':
-          endpoint = '/pdf/upload';
-          break;
-        case 'image':
-          endpoint = '/image/upload';
-          break;
-        case 'video':
-          endpoint = '/video/upload';
-          break;
-        default:
-          return;
-      }
-
-      const response = await axios.post(`${API_BASE}${endpoint}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          message.loading({ content: `Uploading... ${percent}%`, key: 'upload' });
-        }
-      });
-
-      message.success({ content: 'File uploaded successfully!', key: 'upload' });
-      
-      // Navigate to respective analyzer page with file data
-      switch (type) {
-        case 'pdf':
-          window.location.href = `/pdf?file_id=${response.data.file_id}`;
-          break;
-        case 'image':
-          window.location.href = `/image?file_id=${response.data.file_id}`;
-          break;
-        case 'video':
-          window.location.href = `/video?file_id=${response.data.file_id}`;
-          break;
-      }
-
-    } catch (error) {
-      message.error('Upload failed: ' + (error.response?.data?.detail || error.message));
-    }
-  };
-
-  const uploadProps = (type) => ({
-    beforeUpload: (file) => {
-      handleFileUpload(file, type);
-      return false; // Prevent default upload
-    },
-    showUploadList: false
-  });
-
-  const quickActions = [
-    {
-      title: "PDF Analysis",
-      icon: <FilePdfOutlined />,
-      description: "Process documents with OCR",
-      route: "/pdf",
-      type: "pdf"
-    },
-    {
-      title: "Image Analysis", 
-      icon: <PictureOutlined />,
-      description: "Extract text from images",
-      route: "/image",
-      type: "image"
-    },
-    {
-      title: "Video Analysis",
-      icon: <VideoCameraOutlined />,
-      description: "Transcribe and analyze videos", 
-      route: "/video",
-      type: "video"
-    }
-  ];
+  // ✅ Show analyzer page when clicked
+  if (activeAnalyzer === 'pdf') return <PdfAnalyzer />;
+  if (activeAnalyzer === 'image') return <ImageAnalyzer />;
+  if (activeAnalyzer === 'video') return <VideoAnalyzer />;
 
   return (
-    <div className="dashboard-page">
+    <div
+      className="dashboard-page"
+      style={{
+        background: 'linear-gradient(135deg, #f0f2f5 0%, #e6f7ff 100%)',
+        minHeight: '100vh',
+        padding: '40px'
+      }}
+    >
       {/* Header */}
-      <div className="page-header">
-        <h1>
+      <div
+        className="page-header"
+        style={{
+          textAlign: 'center',
+          marginBottom: '50px'
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '36px',
+            fontWeight: 'bold',
+            color: '#1890ff',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '10px'
+          }}
+        >
           <RocketOutlined /> Advanced Multimodal RAG System
         </h1>
-        <p>Process documents, images, and videos with AI-powered analysis</p>
+        <p style={{ fontSize: '18px', color: '#555' }}>
+          Process documents, images, and videos with AI-powered analysis
+        </p>
       </div>
 
       {/* Quick Upload */}
-      <Card 
-        title="Quick Upload" 
-        style={{ marginBottom: 24 }}
-        extra={<CloudUploadOutlined />}
+      <Card
+        title={
+          <span style={{ fontSize: '20px', fontWeight: '600' }}>
+            <CloudUploadOutlined style={{ marginRight: 10 }} /> Quick Upload
+          </span>
+        }
+        style={{
+          marginBottom: 40,
+          borderRadius: '16px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+        }}
       >
-        <Row gutter={16}>
-          <Col span={8}>
-            <Upload.Dragger {...uploadProps('pdf')} style={{ padding: '20px' }}>
-              <p className="ant-upload-drag-icon">
+        <Row gutter={[24, 24]}>
+          <Col xs={24} md={8}>
+            <Card
+              hoverable
+              onClick={() => setActiveAnalyzer('pdf')}
+              style={{
+                textAlign: 'center',
+                borderRadius: '12px',
+                height: 180,
+                background: 'linear-gradient(135deg, #fff1f0, #ffccc7)',
+                transition: 'transform 0.3s ease',
+              }}
+              bodyStyle={{ padding: 20 }}
+            >
+              <div style={{ fontSize: '40px', color: '#cf1322', marginBottom: 12 }}>
                 <FilePdfOutlined />
-              </p>
-              <p className="ant-upload-text">Upload PDF</p>
-              <p className="ant-upload-hint">.pdf files only</p>
-            </Upload.Dragger>
+              </div>
+              <h3 style={{ fontWeight: 'bold', fontSize: '18px' }}>PDF Analysis</h3>
+              <p style={{ color: '#595959' }}>Click to open PDF Analyzer</p>
+            </Card>
           </Col>
-          <Col span={8}>
-            <Upload.Dragger {...uploadProps('image')} style={{ padding: '20px' }}>
-              <p className="ant-upload-drag-icon">
+
+          <Col xs={24} md={8}>
+            <Card
+              hoverable
+              onClick={() => setActiveAnalyzer('image')}
+              style={{
+                textAlign: 'center',
+                borderRadius: '12px',
+                height: 180,
+                background: 'linear-gradient(135deg, #f6ffed, #d9f7be)',
+                transition: 'transform 0.3s ease',
+              }}
+              bodyStyle={{ padding: 20 }}
+            >
+              <div style={{ fontSize: '40px', color: '#389e0d', marginBottom: 12 }}>
                 <PictureOutlined />
-              </p>
-              <p className="ant-upload-text">Upload Image</p>
-              <p className="ant-upload-hint">JPG, PNG, BMP, TIFF</p>
-            </Upload.Dragger>
+              </div>
+              <h3 style={{ fontWeight: 'bold', fontSize: '18px' }}>Image Analysis</h3>
+              <p style={{ color: '#595959' }}>Click to open Image Analyzer</p>
+            </Card>
           </Col>
-          <Col span={8}>
-            <Upload.Dragger {...uploadProps('video')} style={{ padding: '20px' }}>
-              <p className="ant-upload-drag-icon">
+
+          <Col xs={24} md={8}>
+            <Card
+              hoverable
+              onClick={() => setActiveAnalyzer('video')}
+              style={{
+                textAlign: 'center',
+                borderRadius: '12px',
+                height: 180,
+                background: 'linear-gradient(135deg, #e6f7ff, #bae7ff)',
+                transition: 'transform 0.3s ease',
+              }}
+              bodyStyle={{ padding: 20 }}
+            >
+              <div style={{ fontSize: '40px', color: '#096dd9', marginBottom: 12 }}>
                 <VideoCameraOutlined />
-              </p>
-              <p className="ant-upload-text">Upload Video</p>
-              <p className="ant-upload-hint">MP4, AVI, MOV, MKV</p>
-            </Upload.Dragger>
+              </div>
+              <h3 style={{ fontWeight: 'bold', fontSize: '18px' }}>Video Analysis</h3>
+              <p style={{ color: '#595959' }}>Click to open Video Analyzer</p>
+            </Card>
           </Col>
         </Row>
       </Card>
 
       {/* Statistics */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="PDFs Processed"
-              value={fileStats.pdfProcessed}
-              prefix={<FilePdfOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Images Analyzed"
-              value={fileStats.imagesAnalyzed}
-              prefix={<PictureOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Videos Transcribed"
-              value={fileStats.videosTranscribed}
-              prefix={<VideoCameraOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Total Queries"
-              value={fileStats.totalQueries}
-              prefix={<RocketOutlined />}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Quick Actions */}
-      <Card title="Quick Actions">
-        <Row gutter={16}>
-          {quickActions.map((action, index) => (
-            <Col span={8} key={index}>
-              <Card 
-                hoverable
-                style={{ textAlign: 'center', height: 150 }}
-                onClick={() => window.location.href = action.route}
-              >
-                <div style={{ fontSize: '32px', marginBottom: 16 }}>
-                  {action.icon}
-                </div>
-                <h3>{action.title}</h3>
-                <p style={{ color: '#666' }}>{action.description}</p>
-              </Card>
-            </Col>
-          ))}
+      <Card
+        title="System Statistics"
+        style={{
+          borderRadius: '16px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+        }}
+      >
+        <Row gutter={[24, 24]}>
+          <Col xs={24} sm={12} md={6}>
+            <Card bordered={false} style={{ textAlign: 'center' }}>
+              <Statistic title="PDFs Processed" value={fileStats.pdfProcessed} prefix={<FilePdfOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card bordered={false} style={{ textAlign: 'center' }}>
+              <Statistic title="Images Analyzed" value={fileStats.imagesAnalyzed} prefix={<PictureOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card bordered={false} style={{ textAlign: 'center' }}>
+              <Statistic title="Videos Transcribed" value={fileStats.videosTranscribed} prefix={<VideoCameraOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card bordered={false} style={{ textAlign: 'center' }}>
+              <Statistic title="Total Queries" value={fileStats.totalQueries} prefix={<RocketOutlined />} />
+            </Card>
+          </Col>
         </Row>
       </Card>
     </div>
