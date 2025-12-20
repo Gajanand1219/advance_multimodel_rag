@@ -20,7 +20,7 @@ import {
 import axios from 'axios';
 
 const { TextArea } = Input;
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = 'https://advance-multimodel-rag-backend.onrender.com';
 
 const ImageAnalyzer = () => {
   const [uploading, setUploading] = useState(false);
